@@ -67,6 +67,7 @@ def train(model, optim, scheduler, criterion, train_set, device, epochs=2, grad_
 
             # print running loss every n steps
             if not iteration % print_interval:
+                print(torch.argmax(out, 1), labels)
                 if wandb.run:
                     wandb.log({"epoch": epoch, "loss": loss.item(), "batch_accuracy": corrects/labels.size(0)}, step=step)
                 print(f"epoch {epoch} - iteration {iteration} - batch loss {loss.item():.2f} - batch accuracy {corrects / labels.size(0):.2f}")

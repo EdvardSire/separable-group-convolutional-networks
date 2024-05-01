@@ -99,7 +99,7 @@ def parse_args():
     parser.add_argument(
         '--dataset',
         choices=[
-            "MNIST", "MNIST_rot", "MNIST_scale", "CIFAR10", "CIFAR10_rot", "MNIST_rot_scale", "STL10", "CIFAR100", "Galaxy10"
+            "SUAS", "MNIST", "MNIST_rot", "MNIST_scale", "CIFAR10", "CIFAR10_rot", "MNIST_rot_scale", "STL10", "CIFAR100", "Galaxy10"
         ],
         required=True
     )

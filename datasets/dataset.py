@@ -14,6 +14,9 @@ from datasets.utils import Cutout
 
 from enum import Enum, auto
 
+import string
+from datasets.suas import SuasDataset
+
 
 class ImplementedDatasets(Enum):
     """
@@ -34,6 +37,8 @@ class ImplementedDatasets(Enum):
 
     PCam = "PCam"
 
+    SUAS = "SUAS"
+
     @classmethod
     def is_implemented(cls, value):
         return value in cls._value2member_map_
@@ -48,7 +53,7 @@ def get_num_in_channels(dataset):
                    ImplementedDatasets.MNIST_rot_scale]:
         return 1  # greyscale
     elif dataset in [ImplementedDatasets.CIFAR10, ImplementedDatasets.CIFAR10_rot, ImplementedDatasets.STL10,
-                     ImplementedDatasets.Galaxy10, ImplementedDatasets.PCam, ImplementedDatasets.CIFAR100]:
+                     ImplementedDatasets.Galaxy10, ImplementedDatasets.PCam, ImplementedDatasets.CIFAR100, ImplementedDatasets.SUAS]:
         return 3  # rgb
     else:
         raise ValueError(f"Dataset {dataset} not supported.")
@@ -74,6 +79,8 @@ def get_num_out_channels(dataset):
         return 2
     elif dataset == ImplementedDatasets.CIFAR100:
         return 100
+    elif dataset == ImplementedDatasets.SUAS:
+        return len(string.digits + string.ascii_uppercase) # 36
     else:
         raise ValueError(f"Dataset {dataset} not supported.")
 
@@ -101,12 +108,23 @@ def get_imsize(dataset):
     elif dataset == ImplementedDatasets.STL10:
         return 96
 
+    elif dataset == ImplementedDatasets.SUAS:
+        return 200 # last average on hand labeled data was 222x216
     else:
         raise ValueError(f"Dataset {dataset} not supported.")
 
 
 def get_dataloader(dataset, batch_size, train=True, root="../data", augment=False):
-    if dataset == ImplementedDatasets.MNIST:
+    if dataset == ImplementedDatasets.SUAS:
+        size = get_imsize(ImplementedDatasets.SUAS)
+        tf = [transforms.ToTensor(),
+              transforms.Resize((size, size)) ]
+        if train:
+            ds = SuasDataset(train_mode=True, transform=transforms.Compose(tf))
+        else:
+            ds = SuasDataset(train_mode=False, transform=transforms.Compose(tf))
+
+    elif dataset == ImplementedDatasets.MNIST:
 
         tf = [transforms.ToTensor(),
               transforms.Normalize((0.1307,), (0.3081,))]
