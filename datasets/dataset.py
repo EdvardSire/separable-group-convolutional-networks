@@ -50,10 +50,10 @@ def get_num_in_channels(dataset):
     @param dataset: ImplementedDatasets enum type
     """
     if dataset in [ImplementedDatasets.MNIST, ImplementedDatasets.MNIST_rot, ImplementedDatasets.MNIST_scale,
-                   ImplementedDatasets.MNIST_rot_scale]:
+                   ImplementedDatasets.MNIST_rot_scale, ImplementedDatasets.SUAS]:
         return 1  # greyscale
     elif dataset in [ImplementedDatasets.CIFAR10, ImplementedDatasets.CIFAR10_rot, ImplementedDatasets.STL10,
-                     ImplementedDatasets.Galaxy10, ImplementedDatasets.PCam, ImplementedDatasets.CIFAR100, ImplementedDatasets.SUAS]:
+                     ImplementedDatasets.Galaxy10, ImplementedDatasets.PCam, ImplementedDatasets.CIFAR100]:
         return 3  # rgb
     else:
         raise ValueError(f"Dataset {dataset} not supported.")
