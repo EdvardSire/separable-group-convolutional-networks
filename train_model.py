@@ -8,6 +8,18 @@ import wandb
 # define step counter globally
 step = 0
 
+def topK(out, labels, TOPK_N=5, predict=False):
+    _, topk_out = torch.topk(out, TOPK_N)
+    # if predict:
+    #     return topk_out
+
+    topk_conf = (topk_out == labels.unsqueeze(1)).any(1).float().mean().item()
+    mapping = list(string.digits+string.ascii_uppercase)
+    local_pred = np.vectorize(lambda x: mapping[x])(topk_out)
+    local_label = np.vectorize(lambda x: mapping[x])(labels.cpu().unsqueeze(1))
+
+    return topk_conf, np.hstack((local_pred, local_label))
+
 
 def train(model, optim, scheduler, criterion, train_set, device, epochs=2, grad_clip_value=1.0, print_interval=100,
           model_save_path="./ckgcnn.pt", save_interval=100, test_fn=None, global_stepcount=True):
@@ -76,14 +88,9 @@ def train(model, optim, scheduler, criterion, train_set, device, epochs=2, grad_
                 writer.add_scalar("Loss/train", loss, step)
                 writer.add_scalar("Accuracy/train", corrects/labels.size(0), step)
 
-                TOPK_N = 5
-                _, pred = torch.topk(out.cpu(), TOPK_N)
-                topk_conf = (pred == labels.cpu().unsqueeze(1)).any(1).float().mean().item()
-                mapping = list(string.digits+string.ascii_uppercase)
                 print("TOPK")
-                local_pred = np.vectorize(lambda x: mapping[x])(pred)
-                local_label = np.vectorize(lambda x: mapping[x])(labels.cpu().unsqueeze(1))
-                print(np.hstack((local_pred, local_label))) #pyright: ignore
+                topk_conf, fused_aryy = topK(out.cpu(), labels.cpu())
+                print(fused_aryy)
                 print(topk_conf)
                 print("LOGITS")
                 local_out = np.vectorize(lambda x: mapping[x])(torch.argmax(out.cpu(), 1).numpy())

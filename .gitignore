@@ -7,4 +7,4 @@ wandb
 *.png
 *.profile
 *.onnx
-
+*.mnt
