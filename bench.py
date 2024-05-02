@@ -24,6 +24,23 @@ def resize(img, size=200):
 
 
 if __name__ == "__main__":
+    # path = Path("/home/ubuntu/Ascend/datasets/outputs_cropped")
+    #
+    # images = list()
+    # for image_path in (path / "images").iterdir():
+    #     images.append(cv2.imread(image_path.__str__()))
+    # 
+    # local_images, labels = rgb2gray(images, ['0']*len(images))
+    #
+    # for local_image, image in zip(local_images, images):
+    #     show(image)
+    #     show(np.array(local_image))
+    # exit()
+
+
+        
+
+
 
     # images, labels = torch.load(Path("val.mnt"))
     images, labels = torch.load(Path("labeled.mnt"))
@@ -38,11 +55,13 @@ if __name__ == "__main__":
         gray_image, image = resize(gray_image), resize(image)
         # print(gray_image.reshape(1,1,200,200).astype(np.float32))
         show(image)
+        # show(image[40:160,40:160,:])
         outs = session.run(["output"],{"input": gray_image.reshape(1,1,200,200).astype(np.float32) / 255.0})
-        _, indicies = torch.topk(torch.tensor(outs[0]), 5)
-        print(indicies)
-        name = str(np.vectorize(lambda x: list(digits+ascii_uppercase)[x])(indicies).flatten())
-        show(resize(gray_image), name=name)
+        topk_values, indicies = torch.topk(torch.tensor(outs[0]), 5)
+        topk_values = torch.softmax(topk_values, dim=1)
+        name = np.vectorize(lambda x: list(digits+ascii_uppercase)[x])(indicies).flatten()
+        confs = topk_values[0].tolist()
+        show(resize(gray_image), name=",".join([ f"{n} {c:.2f}"for n, c in zip(name, confs)]))
         # image, local_image = np.array(image), np.array(local_image)
         # show(cv2.GaussianBlur(dilated_image, (9,9), 0))
         # show(image)

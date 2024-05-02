@@ -80,6 +80,7 @@ def get_num_out_channels(dataset):
     elif dataset == ImplementedDatasets.CIFAR100:
         return 100
     elif dataset == ImplementedDatasets.SUAS:
+        return 29 # Manual
         return len(string.digits + string.ascii_uppercase) # 36
     else:
         raise ValueError(f"Dataset {dataset} not supported.")

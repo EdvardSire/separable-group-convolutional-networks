@@ -8,6 +8,7 @@ import torch
 import cv2
 import numpy as np
 import sys
+import string
 
 
 def sizeEstimate(lst: list) -> int:
@@ -77,18 +78,31 @@ class SuasDataset(VisionDataset):
 
 
     def __getitem__(self, index):
+        new_alphabet = "012345678ACDEFGHIJKMNPQRTUVXY"
+        alphabet = string.digits+string.ascii_uppercase
+        d = {k: k for k in (string.digits+string.ascii_uppercase)}
+        d["O"] = "0"
+        d["9"] = "6"
+        d["S"] = "5"
+        d["W"] = "M"
+        d["Z"] = "N"
+        d["B"] = "8"
+        d["L"] = "7"
+
         img, label = self.images[index], int(self.labels[index])
-
-
+        new_label = new_alphabet.index(d[f"{(alphabet)[label]}"])
+        # print(np.vectorize(lambda x: new_alphabet[x])(new_label), np.vectorize(lambda x: alphabet[x])(label))
         if self.transform is not None:
             img = self.transform(img)
 
-        return (img, label)
+        return (img, new_label)
 
 
 if __name__ == "__main__":
     # dataset = SuasDataset(train_mode=True)
-    a = Path("/home/ascend/repos/datasets/custom_new_data")
-    b = Path("/home/ascend/repos/datasets/custom_new_data_ocr")
-    dataset = SuasDataset(a, b, train_mode=True)
+    a = Path("/home/ubuntu/Ascend/separable-group-convolutional-networks")
+    b = Path("/home/ubuntu/Ascend/separable-group-convolutional-networks")
+    dataset = SuasDataset(a, b, train_mode=False)
+    # for i in range(20*20):
+    #     dataset.__getitem__(i)
     # dataset.rgb2gray()
