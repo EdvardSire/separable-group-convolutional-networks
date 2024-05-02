@@ -11,6 +11,9 @@ import sys
 import string
 
 
+new_alphabet = "012345678ACDEFGHIJKMNPQRTUVXY"
+mapping = new_alphabet
+
 def sizeEstimate(lst: list) -> int:
     return sum(sys.getsizeof(x.tobytes()) for x in lst if type(x) == Image.Image)
 
@@ -78,7 +81,6 @@ class SuasDataset(VisionDataset):
 
 
     def __getitem__(self, index):
-        new_alphabet = "012345678ACDEFGHIJKMNPQRTUVXY"
         alphabet = string.digits+string.ascii_uppercase
         d = {k: k for k in (string.digits+string.ascii_uppercase)}
         d["O"] = "0"

@@ -1,20 +1,16 @@
 import torch
 from torch.utils.tensorboard.writer import SummaryWriter
-import string
 import numpy as np
+from datasets.suas import mapping
 
 import wandb
 
 # define step counter globally
 step = 0
 
-def topK(out, labels, TOPK_N=5, predict=False):
+def topK(out, labels, TOPK_N=5):
     _, topk_out = torch.topk(out, TOPK_N)
-    # if predict:
-    #     return topk_out
-
     topk_conf = (topk_out == labels.unsqueeze(1)).any(1).float().mean().item()
-    mapping = list(string.digits+string.ascii_uppercase)
     local_pred = np.vectorize(lambda x: mapping[x])(topk_out)
     local_label = np.vectorize(lambda x: mapping[x])(labels.cpu().unsqueeze(1))
 
@@ -61,9 +57,12 @@ def train(model, optim, scheduler, criterion, train_set, device, epochs=2, grad_
             samples = samples.to(device)
             labels = labels.to(device)
 
+            torch.cuda.memory._record_memory_history(max_entries=100000)
             # forward pass
             out = model(samples)
             loss = criterion(out, labels)
+            torch.cuda.memory._dump_snapshot("out.pkl")
+            torch.cuda.memory._record_memory_history(enabled=None)
 
             # backward pass, gradient clipping and weight update
             loss.backward()
@@ -97,6 +96,7 @@ def train(model, optim, scheduler, criterion, train_set, device, epochs=2, grad_
                 local_label = np.vectorize(lambda x: mapping[x])(labels.cpu().numpy())
                 print(local_out)
                 print(local_label)
+                TOPK_N = 5
                 writer.add_scalar(f"top_{TOPK_N}_accuracy/train", topk_conf, step)
                 writer.flush()
 
