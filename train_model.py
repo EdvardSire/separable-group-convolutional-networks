@@ -61,9 +61,12 @@ def train(model, optim, scheduler, criterion, train_set, device, epochs=2, grad_
             samples = samples.to(device)
             labels = labels.to(device)
 
+            torch.cuda.memory._record_memory_history(max_entries=100000)
             # forward pass
             out = model(samples)
             loss = criterion(out, labels)
+            torch.cuda.memory._dump_snapshot("out.pkl")
+            torch.cuda.memory._record_memory_history(enabled=None)
 
             # backward pass, gradient clipping and weight update
             loss.backward()
