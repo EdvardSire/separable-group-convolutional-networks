@@ -15,13 +15,13 @@ def sizeEstimate(lst):
 
 class SuasDataset(VisionDataset):
     def __init__(self,
-                 dataset_root_path: Path = Path("/home/ascend/repos/cuDLA-samples/datasets/custom_new_data"),
-                 save_root_path: Path = Path("/home/ascend/repos/cuDLA-samples/datasets/custom_new_data_ocr"),
+                 dataset_root_path: Path = Path("/home/ascend/repos/datasets"),
+                 save_root_path: Path = Path("/home/ascend/repos/datasets"),
                  train_mode: bool = True,
                  transform = None
                  ):
         super().__init__(transform=transform)
-        self.PATH_STEM = (Path("train") if train_mode else Path("val"))
+        self.PATH_STEM = (Path("train_gray") if train_mode else Path("val_gray"))
         self.images = list()
         self.labels = list()
         self.dataset_picke_path = (save_root_path / self.PATH_STEM.with_suffix(".mnt"))
@@ -83,7 +83,11 @@ class SuasDataset(VisionDataset):
 
 if __name__ == "__main__":
     # dataset = SuasDataset(train_mode=True)
+<<<<<<< HEAD
     a = Path("/home/ascend/repos/datasets/custom_new_data")
     b = Path("/home/ascend/repos/datasets/custom_new_data_ocr")
     dataset = SuasDataset(a, b, train_mode=True)
     # dataset.rgb2gray()
+=======
+    dataset = SuasDataset(train_mode=True)
+>>>>>>> 3dfb11758b81dcfc7b87f179037feb077855a273

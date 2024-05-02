@@ -1,5 +1,7 @@
 import torch
-import os
+from torch.utils.tensorboard.writer import SummaryWriter
+import string
+import numpy as np
 
 import wandb
 
@@ -25,6 +27,7 @@ def train(model, optim, scheduler, criterion, train_set, device, epochs=2, grad_
     :param global_stepcount:
     """
 
+    writer = SummaryWriter()
     total_samples = 0
     if global_stepcount:
         global step
@@ -61,16 +64,40 @@ def train(model, optim, scheduler, criterion, train_set, device, epochs=2, grad_
             running_loss += (loss.item() * labels.size(0))
             corrects = (torch.max(out, 1)[1] == labels).sum().item()
 
+
+            
+
             running_corrects += corrects
             step += 1
             total_samples += labels.size(0)
 
             # print running loss every n steps
             if not iteration % print_interval:
-                print(torch.argmax(out, 1), labels)
+                writer.add_scalar("Loss/train", loss, step)
+                writer.add_scalar("Accuracy/train", corrects/labels.size(0), step)
+
+                TOPK_N = 5
+                _, pred = torch.topk(out.cpu(), TOPK_N)
+                topk_conf = (pred == labels.cpu().unsqueeze(1)).any(1).float().mean().item()
+                mapping = list(string.digits+string.ascii_uppercase)
+                print("TOPK")
+                local_pred = np.vectorize(lambda x: mapping[x])(pred)
+                local_label = np.vectorize(lambda x: mapping[x])(labels.cpu().unsqueeze(1))
+                print(np.hstack((local_pred, local_label))) #pyright: ignore
+                print(topk_conf)
+                print("LOGITS")
+                local_out = np.vectorize(lambda x: mapping[x])(torch.argmax(out.cpu(), 1).numpy())
+                local_label = np.vectorize(lambda x: mapping[x])(labels.cpu().numpy())
+                print(local_out)
+                print(local_label)
+                writer.add_scalar(f"top_{TOPK_N}_accuracy/train", topk_conf, step)
+                writer.flush()
+
+
                 if wandb.run:
                     wandb.log({"epoch": epoch, "loss": loss.item(), "batch_accuracy": corrects/labels.size(0)}, step=step)
                 print(f"epoch {epoch} - iteration {iteration} - batch loss {loss.item():.2f} - batch accuracy {corrects / labels.size(0):.2f}")
+                print()
 
             # save the model on interval
             if not iteration % save_interval:
