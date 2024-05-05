@@ -31,16 +31,18 @@ def rgb2gray(images: list[tImage], labels: list[tImage]):
 
 class SuasDataset(VisionDataset):
     def __init__(self,
-                 dataset_root_path: Path = Path("/home/ascend/repos/datasets"),
-                 save_root_path: Path = Path("/home/ascend/repos/datasets"),
+                 label_key = "id_shape",
+                 dataset_root_path: Path = Path("/home/ascend/repos/datasets/custom_new_data"),
+                 save_root_path: Path = Path("/home/ascend/repos/datasets/custom_new_data_ocr"),
                  train_mode: bool = True,
-                 transform = None
+                 transform = None,
                  ):
         super().__init__(transform=transform)
-        self.PATH_STEM = (Path("train_gray") if train_mode else Path("val_gray"))
+        self.PATH_STEM = (Path("train") if train_mode else Path("val"))
         self.images = list()
         self.labels = list()
         self.dataset_picke_path = (save_root_path / self.PATH_STEM.with_suffix(".mnt"))
+        self.label_key = label_key
 
         if not self.dataset_picke_path.exists():
             print(f"{self.dataset_picke_path} not found, generating it!")
@@ -52,7 +54,7 @@ class SuasDataset(VisionDataset):
 
 
     def prepare(self, dataset_root_path: Path):
-        for i, label_json in enumerate(tqdm((dataset_root_path / self.PATH_STEM.with_suffix(".mnt")).iterdir())):
+        for i, label_json in enumerate(tqdm((dataset_root_path / self.PATH_STEM).iterdir())):
             if not label_json.suffix == ".json": continue
 
             with open(label_json.__str__(), 'r') as file:
@@ -63,8 +65,7 @@ class SuasDataset(VisionDataset):
                             bbox = json_dump[index]["bbox"]
                             cropped_image = image.convert("RGB").crop((bbox["xmin"], bbox["ymin"], bbox["xmax"], bbox["ymax"]))
                             self.images.append(cropped_image)
-                            self.labels.append(json_dump[index]["id_symbol"])
-
+                            self.labels.append(json_dump[index][self.label_key])
             if i % 100 == 0:
                 print(sizeEstimate(self.images) // 10**6, "MB")
 
@@ -81,30 +82,39 @@ class SuasDataset(VisionDataset):
 
 
     def __getitem__(self, index):
-        alphabet = string.digits+string.ascii_uppercase
-        d = {k: k for k in (string.digits+string.ascii_uppercase)}
-        d["O"] = "0"
-        d["9"] = "6"
-        d["S"] = "5"
-        d["W"] = "M"
-        d["Z"] = "N"
-        d["B"] = "8"
-        d["L"] = "7"
+        if self.label_key == "id_symbol":
+            alphabet = string.digits+string.ascii_uppercase
+            d = {k: k for k in (string.digits+string.ascii_uppercase)}
+            d["O"] = "0"
+            d["9"] = "6"
+            d["S"] = "5"
+            d["W"] = "M"
+            d["Z"] = "N"
+            d["B"] = "8"
+            d["L"] = "7"
 
-        img, label = self.images[index], int(self.labels[index])
-        new_label = new_alphabet.index(d[f"{(alphabet)[label]}"])
-        # print(np.vectorize(lambda x: new_alphabet[x])(new_label), np.vectorize(lambda x: alphabet[x])(label))
-        if self.transform is not None:
-            img = self.transform(img)
+            img, label = self.images[index], int(self.labels[index])
+            new_label = new_alphabet.index(d[f"{(alphabet)[label]}"])
+            # print(np.vectorize(lambda x: new_alphabet[x])(new_label), np.vectorize(lambda x: alphabet[x])(label))
+            if self.transform is not None:
+                img = self.transform(img)
 
-        return (img, new_label)
+            return (img, new_label)
+        else:
+            assert self.label_key == "id_shape"
+            img, label = self.images[index], int(self.labels[index])
+
+            if self.transform is not None:
+                img = self.transform(img)
+
+            print(label)
+
+            return (img, label)
 
 
 if __name__ == "__main__":
     # dataset = SuasDataset(train_mode=True)
-    a = Path("/home/ubuntu/Ascend/separable-group-convolutional-networks")
-    b = Path("/home/ubuntu/Ascend/separable-group-convolutional-networks")
-    dataset = SuasDataset(a, b, train_mode=False)
+    dataset = SuasDataset("id_shape", train_mode=True)
     # for i in range(20*20):
     #     dataset.__getitem__(i)
     # dataset.rgb2gray()
