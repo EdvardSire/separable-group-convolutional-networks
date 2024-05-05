@@ -33,7 +33,7 @@ class SuasDataset(VisionDataset):
     def __init__(self,
                  label_key = "id_shape",
                  dataset_root_path: Path = Path("/home/ascend/repos/datasets/custom_new_data"),
-                 save_root_path: Path = Path("/home/ascend/repos/datasets/custom_new_data_ocr"),
+                 save_root_path: Path = Path("/home/ascend/repos/datasets/custom_new_data_shape"),
                  train_mode: bool = True,
                  transform = None,
                  ):

@@ -7,7 +7,7 @@ from datasets import ImplementedDatasets, get_dataloader
 
 
 class ShapeClassifier(nn.Module):
-    def __init__(self, input_size = 200, in_channels = 1, num_classes=9):
+    def __init__(self, input_size = 200, in_channels = 3, num_classes=9):
         super().__init__()
         self.in_channels = in_channels
 
@@ -38,6 +38,7 @@ class ShapeClassifier(nn.Module):
         linear_in = (input_size >> len(hidden_dims))**2 * 512
 
         self.head = nn.Sequential(
+            nn.Flatten(),
             nn.Dropout(0.5),
             nn.Linear(linear_in, 4096),
             nn.ReLU(),
@@ -49,7 +50,6 @@ class ShapeClassifier(nn.Module):
 
     def forward(self, x):
         features = self.backbone(x)
-        features = torch.flatten(features)
         return self.head(features)
 
 if __name__ == "__main__":
@@ -62,7 +62,7 @@ if __name__ == "__main__":
     )
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optim, T_max=epochs)
     criterion = nn.CrossEntropyLoss()
-    train_set = get_dataloader(dataset=ImplementedDatasets.SUAS, batch_size=16, train=False)
+    train_set = get_dataloader(dataset=ImplementedDatasets.SUAS, batch_size=16, train=True)
     print_interval = 10
     model_save_path="VGGshape.pt"
     device = torch.device("cuda:0" if torch.cuda.is_available()  else "cpu")

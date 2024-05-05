@@ -45,6 +45,7 @@ def train(model, optim, scheduler, criterion, train_set, device, epochs=2, grad_
     best_acc = 0.
 
     for epoch in range(epochs):
+        model.to(device)
         model.train()
 
         # Accumulate accuracy and loss
