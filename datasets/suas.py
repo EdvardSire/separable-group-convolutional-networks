@@ -32,13 +32,13 @@ def rgb2gray(images: list[tImage], labels: list[tImage]):
 class SuasDataset(VisionDataset):
     def __init__(self,
                  label_key = "id_shape",
-                 dataset_root_path: Path = Path("/home/ascend/repos/datasets/custom_new_data"),
-                 save_root_path: Path = Path("/home/ascend/repos/datasets/custom_new_data_ocr"),
+                 dataset_root_path: Path = Path("/home/ascend/repos/cuDLA-samples/datasets/custom_new_data"),
+                 save_root_path: Path = Path("/home/ascend/repos/cuDLA-samples/datasets/custom_new_data_shape"),
                  train_mode: bool = True,
                  transform = None,
                  ):
         super().__init__(transform=transform)
-        self.PATH_STEM = (Path("train") if train_mode else Path("val"))
+        self.PATH_STEM = (Path("train_gray") if train_mode else Path("val_gray"))
         self.images = list()
         self.labels = list()
         self.dataset_picke_path = (save_root_path / self.PATH_STEM.with_suffix(".mnt"))
@@ -107,14 +107,13 @@ class SuasDataset(VisionDataset):
             if self.transform is not None:
                 img = self.transform(img)
 
-            print(label)
-
             return (img, label)
 
 
 if __name__ == "__main__":
     # dataset = SuasDataset(train_mode=True)
     dataset = SuasDataset("id_shape", train_mode=True)
+    dataset.prepareGray()
     # for i in range(20*20):
     #     dataset.__getitem__(i)
     # dataset.rgb2gray()

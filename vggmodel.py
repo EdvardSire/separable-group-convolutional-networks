@@ -12,6 +12,7 @@ class ShapeClassifier(nn.Module):
         self.in_channels = in_channels
 
         hidden_dims = [[64, 64], [128, 128], [256, 256, 256], [512, 512, 512], [512, 512, 512]]
+        #hidden_dims = [[64, 64], [128, 128], [256, 256, 256], [512, 512, 512]]
         layers = []
 
         for conv_group in hidden_dims:
@@ -35,21 +36,19 @@ class ShapeClassifier(nn.Module):
 
         self.backbone = nn.Sequential(*layers)
 
-        linear_in = (input_size >> len(hidden_dims))**2 * 512
+        linear_in = (input_size >> len(hidden_dims))**2 * hidden_dims[-1][-1]
 
         self.head = nn.Sequential(
+            nn.Flatten(),
             nn.Dropout(0.5),
             nn.Linear(linear_in, 4096),
             nn.ReLU(),
-            nn.Dropout(0.5),
-            nn.Linear(4096, 4096),
             nn.Linear(4096, num_classes)
         )
 
 
     def forward(self, x):
         features = self.backbone(x)
-        features = torch.flatten(features)
         return self.head(features)
 
 if __name__ == "__main__":
@@ -62,12 +61,13 @@ if __name__ == "__main__":
     )
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optim, T_max=epochs)
     criterion = nn.CrossEntropyLoss()
-    train_set = get_dataloader(dataset=ImplementedDatasets.SUAS, batch_size=16, train=False)
+    train_set = get_dataloader(dataset=ImplementedDatasets.SUAS, batch_size=32, train=True)
     print_interval = 10
     model_save_path="VGGshape.pt"
     device = torch.device("cuda:0" if torch.cuda.is_available()  else "cpu")
     test_fn = None
 
+    model.to(device)
     train(
         model=model,
         optim=optim,
@@ -79,4 +79,4 @@ if __name__ == "__main__":
         epochs=epochs,
         device=device,
         test_fn=test_fn
-        )
+    )
