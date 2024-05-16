@@ -3,6 +3,7 @@ import torchvision
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader, ConcatDataset
 from torchvision import datasets, transforms
+from pathlib import Path
 
 from datasets.galaxy10 import Galaxy10Dataset
 from datasets.pcam import PCamDataset
@@ -123,7 +124,10 @@ def get_dataloader(dataset, batch_size, train=True, root="../data", augment=Fals
         if train:
             ds = SuasDataset(train_mode=True, transform=transforms.Compose(tf))
         else:
-            ds = SuasDataset(train_mode=False, transform=transforms.Compose(tf))
+            ds = SuasDataset(save_root_path=Path("/home/ascend/repos/datasets/custom_new_data_ocr_val"),
+                                   train_mode=False,
+                                   isMultiLabelFeatures=True,
+                                    transform=transforms.Compose(tf))
 
     elif dataset == ImplementedDatasets.MNIST:
 

@@ -1,8 +1,9 @@
 import torch
 import wandb
+import torch
 
 
-def test(model, test_set, device, loss=None, limit=None):
+def test(model, test_set, device, step, loss=None, limit=None, writer=None):
     """
     Evaluate the classification accuracy of a given model on a given test set.
 
@@ -35,6 +36,10 @@ def test(model, test_set, device, loss=None, limit=None):
                 if total > limit:
                     break
 
+    if writer:
+        writer.add_scalar("Loss/test", total_loss, step)
+        writer.add_scalar("Accuracy/test", 100* correct / total, step)
+        writer.flush()
     print(f"test set accuracy on {total} samples: {(100 * correct / total)}")
 
     if wandb.run:

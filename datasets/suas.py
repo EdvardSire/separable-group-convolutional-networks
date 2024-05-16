@@ -1,3 +1,4 @@
+from torch._C import _is_multithreading_enabled
 from torchvision.datasets import VisionDataset
 from pathlib import Path
 import json
@@ -37,6 +38,7 @@ class SuasDataset(VisionDataset):
                  save_root_path: Path = Path("/home/ascend/repos/datasets/custom_new_data_ocr"),
                  train_mode: bool = True,
                  transform = None,
+                 isMultiLabelFeatures = False
                  ):
         super().__init__(transform=transform)
         self.PATH_STEM = (Path("train") if train_mode else Path("val"))
@@ -44,6 +46,7 @@ class SuasDataset(VisionDataset):
         self.labels = list()
         self.dataset_picke_path = (save_root_path / self.PATH_STEM.with_suffix(".mnt"))
         self.label_key = label_key
+        self.isMultiLabelFeatures = isMultiLabelFeatures
 
         if not self.dataset_picke_path.exists():
             print(f"{self.dataset_picke_path} not found, generating it!")
@@ -94,7 +97,12 @@ class SuasDataset(VisionDataset):
             d["B"] = "8"
             d["L"] = "7"
 
-            img, label = self.images[index], int(self.labels[index])
+            img = self.images[index]
+            if self.isMultiLabelFeatures:
+                label = int(self.labels[index][2]) 
+            else:
+                label = int(self.labels[index])
+
             new_label = new_alphabet.index(d[f"{(alphabet)[label]}"])
             # print(np.vectorize(lambda x: new_alphabet[x])(new_label), np.vectorize(lambda x: alphabet[x])(label))
             if self.transform is not None:

@@ -1,4 +1,5 @@
 import torch
+from torch.utils.tensorboard.writer import SummaryWriter
 
 from ck_g_cnn.groups import SE2, Rplus, Sim2
 
@@ -11,6 +12,7 @@ import wandb
 from config import config
 from datasets import get_dataloader, ImplementedDatasets
 
+from datasets.suas import SuasDataset
 from train_model import train
 from test_model import test
 
@@ -166,17 +168,19 @@ if __name__ == "__main__":
     # hacky :) store config file with the model so it gets saved alongside the model
     net.config_file = config
 
+    writer = SummaryWriter()
     train(
         model=net,
         optim=optim,
         scheduler=scheduler,
         criterion=criterion,
         train_set=train_set,
+        test_set=test_set,
         print_interval=config["print_interval"],
         model_save_path=config["model_save_path"],
         epochs=config["epochs"],
         device=device,
-        test_fn=lambda: test(net, test_set, device=device, loss=criterion),
+        writer=writer
     )
 
     if config["wandb"]:
