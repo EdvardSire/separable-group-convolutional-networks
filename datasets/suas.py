@@ -18,10 +18,11 @@ def sizeEstimate(lst: list) -> int:
     return sum(sys.getsizeof(x.tobytes()) for x in lst if type(x) == Image.Image)
 
 
-def rgb2gray(images: list[tImage], labels: list[int]):
+def rgb2gray(images: list[tImage], labels: list[int], use_tqdm = True):
     local_images = list()
     local_labels = list()
-    for image, label in tqdm(zip(images, labels)):
+    wrapper = tqdm if use_tqdm else lambda x: x
+    for image, label in wrapper(zip(images, labels)):
         image = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
         dilated_image = cv2.dilate(cv2.Canny(image, 100, 100), cv2.getStructuringElement(cv2.MORPH_RECT, (3,3)))
         local_images.append(Image.fromarray(dilated_image))
