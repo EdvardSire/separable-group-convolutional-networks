@@ -87,17 +87,17 @@ def train(model, optim, scheduler, criterion, train_set, device, epochs=2, grad_
                 writer.add_scalar("Loss/train", loss, step)
                 writer.add_scalar("Accuracy/train", corrects/labels.size(0), step)
 
-                print("TOPK")
-                topk_conf, fused_aryy = topK(out.cpu(), labels.cpu())
-                print(fused_aryy)
-                print(topk_conf)
-                print("LOGITS")
-                local_out = np.vectorize(lambda x: mapping[x])(torch.argmax(out.cpu(), 1).numpy())
-                local_label = np.vectorize(lambda x: mapping[x])(labels.cpu().numpy())
-                print(local_out)
-                print(local_label)
-                TOPK_N = 5
-                writer.add_scalar(f"top_{TOPK_N}_accuracy/train", topk_conf, step)
+                # print("TOPK")
+                # topk_conf, fused_aryy = topK(out.cpu(), labels.cpu())
+                # print(fused_aryy)
+                # print(topk_conf)
+                # print("LOGITS")
+                # local_out = np.vectorize(lambda x: mapping[x])(torch.argmax(out.cpu(), 1).numpy())
+                # local_label = np.vectorize(lambda x: mapping[x])(labels.cpu().numpy())
+                # print(local_out)
+                # print(local_label)
+                # TOPK_N = 5
+                # writer.add_scalar(f"top_{TOPK_N}_accuracy/train", topk_conf, step)
                 writer.flush()
 
 

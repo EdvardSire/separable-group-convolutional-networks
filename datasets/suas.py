@@ -10,7 +10,7 @@ import numpy as np
 import sys
 import string
 
-
+alphabet = string.digits+string.ascii_uppercase
 new_alphabet = "012345678ACDEFGHIJKMNPQRTUVXY"
 mapping = new_alphabet
 
@@ -18,7 +18,7 @@ def sizeEstimate(lst: list) -> int:
     return sum(sys.getsizeof(x.tobytes()) for x in lst if type(x) == Image.Image)
 
 
-def rgb2gray(images: list[tImage], labels: list[tImage]):
+def rgb2gray(images: list[tImage], labels: list[int]):
     local_images = list()
     local_labels = list()
     for image, label in tqdm(zip(images, labels)):
