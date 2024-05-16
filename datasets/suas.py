@@ -31,7 +31,7 @@ def rgb2gray(images: list[tImage], labels: list[int]):
 
 class SuasDataset(VisionDataset):
     def __init__(self,
-                 label_key = "id_shape",
+                 label_key = "id_symbol",
                  dataset_root_path: Path = Path("/home/ascend/repos/datasets/custom_new_data"),
                  save_root_path: Path = Path("/home/ascend/repos/datasets/custom_new_data_ocr"),
                  train_mode: bool = True,
