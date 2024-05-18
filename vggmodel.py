@@ -2,6 +2,7 @@ import torch
 from torch import nn, optim
 
 from train_model import train
+from test_model import test
 
 from datasets import ImplementedDatasets, get_dataloader
 
@@ -62,10 +63,13 @@ if __name__ == "__main__":
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optim, T_max=epochs)
     criterion = nn.CrossEntropyLoss()
     train_set = get_dataloader(dataset=ImplementedDatasets.SUAS, batch_size=32, train=True)
+    val_set   = get_dataloader(dataset=ImplementedDatasets.SUAS, batch_size=32, train=False)
     print_interval = 10
     model_save_path="VGGshape.pt"
     device = torch.device("cuda:0" if torch.cuda.is_available()  else "cpu")
-    test_fn = None
+
+    def test_fn():
+        return test(model, val_set, device, criterion)
 
     model.to(device)
     train(

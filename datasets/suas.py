@@ -73,10 +73,6 @@ class SuasDataset(VisionDataset):
     def prepareGray(self):
         torch.save(rgb2gray(self.images, self.labels), self.dataset_picke_path.with_name(self.PATH_STEM.__str__()+"_gray").with_suffix(".mnt"))
 
-
-
-
-        
     def __len__(self):
         return len(self.images)
 

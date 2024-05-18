@@ -35,7 +35,7 @@ def test(model, test_set, device, loss=None, limit=None):
                 if total > limit:
                     break
 
-    print(f"test set accuracy on {total} samples: {(100 * correct / total)}")
+    print(f"test set accuracy on {total} samples: {(100 * correct / total:.2f)}%")
 
     if wandb.run:
         wandb.log({"test_accuracy": correct/total, "test_loss": total_loss/total_batches})

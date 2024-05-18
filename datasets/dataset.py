@@ -120,10 +120,7 @@ def get_dataloader(dataset, batch_size, train=True, root="../data", augment=Fals
         size = get_imsize(ImplementedDatasets.SUAS)
         tf = [transforms.ToTensor(),
               transforms.Resize((size, size)) ]
-        if train:
-            ds = SuasDataset(train_mode=True, transform=transforms.Compose(tf))
-        else:
-            ds = SuasDataset(train_mode=False, transform=transforms.Compose(tf))
+        ds = SuasDataset(train_mode=train, transform=transforms.Compose(tf))
 
     elif dataset == ImplementedDatasets.MNIST:
 
