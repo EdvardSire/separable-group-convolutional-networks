@@ -1,5 +1,6 @@
 import torch
 from torch.utils.tensorboard.writer import SummaryWriter
+from pathlib import Path
 
 from ck_g_cnn.groups import SE2, Rplus, Sim2
 
@@ -168,7 +169,23 @@ if __name__ == "__main__":
     # hacky :) store config file with the model so it gets saved alongside the model
     net.config_file = config
 
-    writer = SummaryWriter()
+
+    LOGDIR=Path("runs")
+    paths = [path for path in LOGDIR.iterdir() if path.name.startswith("exp")]
+    try:
+        iternum = 1+int(max([iternum.__str__().split("_")[1] for iternum in paths]))
+    except:
+        iternum = 1
+
+    writer = SummaryWriter(log_dir="runs/exp_{}".format((iternum)))
+    # writer.add_hparams({}, {"group": config["group"],
+    #                     # "hidden_sizes": config["hidden_sizes"],
+    #                     # "num_group_elem": config["num_group_elements"],
+    #                     "kernel_size": config["kernel_size"],
+    #                     "ck_net_num_hidden": config["ck_net_num_hidden"],
+    #                     "ck_net_hidden_size": config["ck_net_hidden_size"],
+    #                     "ck_net_implementation": config["ck_net_implementation"]})
+    #
     train(
         model=net,
         optim=optim,

@@ -2,8 +2,7 @@ import torch
 import numpy as np
 from datasets.suas import mapping
 from test_model import test
-
-import wandb
+from pathlib import Path
 
 # define step counter globally
 step = 0
@@ -56,12 +55,12 @@ def train(model, optim, scheduler, criterion, train_set, test_set, device, epoch
             samples = samples.to(device)
             labels = labels.to(device)
 
-            torch.cuda.memory._record_memory_history(max_entries=100000)
+            # torch.cuda.memory._record_memory_history(max_entries=100000)
             # forward pass
             out = model(samples)
             loss = criterion(out, labels)
-            torch.cuda.memory._dump_snapshot("out.pkl")
-            torch.cuda.memory._record_memory_history(enabled=None)
+            # torch.cuda.memory._dump_snapshot("out.pkl")
+            # torch.cuda.memory._record_memory_history(enabled=None)
 
             # backward pass, gradient clipping and weight update
             loss.backward()
@@ -97,8 +96,6 @@ def train(model, optim, scheduler, criterion, train_set, test_set, device, epoch
                     writer.flush()
 
 
-                if wandb.run:
-                    wandb.log({"epoch": epoch, "loss": loss.item(), "batch_accuracy": corrects/labels.size(0)}, step=step)
                 print(f"epoch {epoch} - iteration {iteration} - batch loss {loss.item():.2f} - batch accuracy {corrects / labels.size(0):.2f}")
                 print()
 
@@ -110,16 +107,13 @@ def train(model, optim, scheduler, criterion, train_set, test_set, device, epoch
 
         # save the model after each epoch
         if model_save_path:
-            torch.save(model, model_save_path)
+            torch.save(model, Path(writer.get_logdir()) / Path("model_epoch_num_{}".format(epoch)).with_suffix(".pt"))
 
         if testing:
             val_acc = test(model, test_set, device, step, loss=criterion, writer=writer)
 
             if val_acc > best_acc:
                 best_acc = val_acc
-
-                if wandb.run:
-                    wandb.log({"best_accuracy": best_acc})
 
             # step learning rate
             if scheduler:
