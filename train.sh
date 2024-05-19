@@ -7,7 +7,7 @@ python3 run_experiment.py \
     --hidden_sizes 32,32,64 \
     --dataset SUAS \
     --epochs 1000 \
-    --batch_size 8 \
+    --batch_size 32 \
     --learning_rate 1e-4 \
     --optim adam \
     --kernel_size 7 \

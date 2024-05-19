@@ -3,6 +3,7 @@ import torchvision
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader, ConcatDataset
 from torchvision import datasets, transforms
+from pathlib import Path
 
 from datasets.galaxy10 import Galaxy10Dataset
 from datasets.pcam import PCamDataset
@@ -121,7 +122,6 @@ def get_dataloader(dataset, batch_size, train=True, root="../data", augment=Fals
         tf = transform if len(transform) else [transforms.ToTensor(),
               transforms.Resize((size, size)) ]
         ds = SuasDataset(train_mode=train, transform=transforms.Compose(tf))
-
     elif dataset == ImplementedDatasets.MNIST:
 
         tf = [transforms.ToTensor(),

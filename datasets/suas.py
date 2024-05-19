@@ -1,3 +1,4 @@
+from torch._C import _is_multithreading_enabled
 from torchvision.datasets import VisionDataset
 from pathlib import Path
 import json
@@ -11,7 +12,7 @@ import sys
 import string
 import pickle
 
-
+alphabet = string.digits+string.ascii_uppercase
 new_alphabet = "012345678ACDEFGHIJKMNPQRTUVXY"
 mapping = new_alphabet
 
@@ -19,10 +20,11 @@ def sizeEstimate(lst: list) -> int:
     return sum(sys.getsizeof(x.tobytes()) for x in lst if type(x) == Image.Image)
 
 
-def rgb2gray(images: list[tImage], labels: list[tImage]):
+def rgb2gray(images: list[tImage], labels: list[int], use_tqdm = True):
     local_images = list()
     local_labels = list()
-    for image, label in tqdm(zip(images, labels)):
+    wrapper = tqdm if use_tqdm else lambda x: x
+    for image, label in wrapper(zip(images, labels)):
         image = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
         dilated_image = cv2.dilate(cv2.Canny(image, 100, 100), cv2.getStructuringElement(cv2.MORPH_RECT, (3,3)))
         local_images.append(Image.fromarray(dilated_image))
@@ -37,6 +39,7 @@ class SuasDataset(VisionDataset):
                  save_root_path: Path = Path("/home/ascend/repos/cuDLA-samples/datasets/custom_new_data_shape"),
                  train_mode: bool = True,
                  transform = None,
+                 isMultiLabelFeatures = False
                  ):
         super().__init__(transform=transform)
         #self.PATH_STEM = (Path("train_gray") if train_mode else Path("val_gray"))
@@ -45,6 +48,7 @@ class SuasDataset(VisionDataset):
         self.labels = list()
         self.dataset_pickle_path = (save_root_path / self.PATH_STEM.with_suffix(".mnt"))
         self.label_key = label_key
+        self.isMultiLabelFeatures = isMultiLabelFeatures
 
         if self.dataset_pickle_path.exists():
             print(f"{self.dataset_pickle_path} found, loading it!")
@@ -95,7 +99,12 @@ class SuasDataset(VisionDataset):
             d["B"] = "8"
             d["L"] = "7"
 
-            img, label = self.images[index], int(self.labels[index])
+            img = self.images[index]
+            if self.isMultiLabelFeatures:
+                label = int(self.labels[index][2]) 
+            else:
+                label = int(self.labels[index])
+
             new_label = new_alphabet.index(d[f"{(alphabet)[label]}"])
             # print(np.vectorize(lambda x: new_alphabet[x])(new_label), np.vectorize(lambda x: alphabet[x])(label))
             if self.transform is not None:
@@ -104,7 +113,12 @@ class SuasDataset(VisionDataset):
             return (img, new_label)
         else:
             assert self.label_key == "id_shape"
-            img, label = self.images[index], int(self.labels[index])
+            img = self.images[index]
+
+            if self.isMultiLabelFeatures:
+                label = int(self.labels[index][0])
+            else:
+                label = int(self.labels[index])
 
             if self.transform is not None:
                 img = self.transform(img)
