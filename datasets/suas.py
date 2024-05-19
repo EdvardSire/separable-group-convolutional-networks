@@ -9,6 +9,7 @@ import cv2
 import numpy as np
 import sys
 import string
+import pickle
 
 
 new_alphabet = "012345678ACDEFGHIJKMNPQRTUVXY"
@@ -38,19 +39,24 @@ class SuasDataset(VisionDataset):
                  transform = None,
                  ):
         super().__init__(transform=transform)
-        self.PATH_STEM = (Path("train_gray") if train_mode else Path("val_gray"))
+        #self.PATH_STEM = (Path("train_gray") if train_mode else Path("val_gray"))
+        self.PATH_STEM = (Path("train") if train_mode else Path("val"))
         self.images = list()
         self.labels = list()
-        self.dataset_picke_path = (save_root_path / self.PATH_STEM.with_suffix(".mnt"))
+        self.dataset_pickle_path = (save_root_path / self.PATH_STEM.with_suffix(".mnt"))
         self.label_key = label_key
 
-        if not self.dataset_picke_path.exists():
-            print(f"{self.dataset_picke_path} not found, generating it!")
+        if self.dataset_pickle_path.exists():
+            print(f"{self.dataset_pickle_path} found, loading it!")
+            self.images, self.labels = torch.load(self.dataset_pickle_path)
+        elif self.dataset_pickle_path.with_suffix(".pkl").exists():
+            print(f"{self.dataset_pickle_path.with_suffix('.pkl')} found, loading it with pickle")
+            with open(self.dataset_pickle_path.with_suffix(".pkl"), "rb") as f:
+                self.images, self.labels = pickle.load(f)
+        else:
+            print(f"{self.dataset_pickle_path} not found, generating it!")
             self.prepare(dataset_root_path)
             torch.save((self.images, self.labels), (save_root_path / self.PATH_STEM.with_suffix(".mnt")))
-        else:
-            print(f"{self.dataset_picke_path} found, loading it!")
-            self.images, self.labels = torch.load(self.dataset_picke_path)
 
 
     def prepare(self, dataset_root_path: Path):
@@ -71,7 +77,7 @@ class SuasDataset(VisionDataset):
 
 
     def prepareGray(self):
-        torch.save(rgb2gray(self.images, self.labels), self.dataset_picke_path.with_name(self.PATH_STEM.__str__()+"_gray").with_suffix(".mnt"))
+        torch.save(rgb2gray(self.images, self.labels), self.dataset_pickle_path.with_name(self.PATH_STEM.__str__()+"_gray").with_suffix(".mnt"))
 
     def __len__(self):
         return len(self.images)

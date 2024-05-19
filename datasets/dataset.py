@@ -115,10 +115,10 @@ def get_imsize(dataset):
         raise ValueError(f"Dataset {dataset} not supported.")
 
 
-def get_dataloader(dataset, batch_size, train=True, root="../data", augment=False):
+def get_dataloader(dataset, batch_size, train=True, root="../data", augment=False, transform = []):
     if dataset == ImplementedDatasets.SUAS:
         size = get_imsize(ImplementedDatasets.SUAS)
-        tf = [transforms.ToTensor(),
+        tf = transform if len(transform) else [transforms.ToTensor(),
               transforms.Resize((size, size)) ]
         ds = SuasDataset(train_mode=train, transform=transforms.Compose(tf))
 

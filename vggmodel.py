@@ -1,10 +1,15 @@
 import torch
 from torch import nn, optim
+from torchvision.transforms import transforms
+import cv2
 
+from datasets.dataset import get_imsize
 from train_model import train
 from test_model import test
 
 from datasets import ImplementedDatasets, get_dataloader
+
+from suas_transforms import RollingShutter
 
 
 class ShapeClassifier(nn.Module):
@@ -43,6 +48,7 @@ class ShapeClassifier(nn.Module):
             nn.Flatten(),
             nn.Dropout(0.5),
             nn.Linear(linear_in, 4096),
+            nn.Dropout(0.1),
             nn.ReLU(),
             nn.Linear(4096, num_classes)
         )
@@ -57,15 +63,29 @@ if __name__ == "__main__":
     model = ShapeClassifier()
     optim = torch.optim.Adam(
         params=model.parameters(),
-        lr=1e-4,
-        weight_decay=0
+        lr=1e-3,
+        weight_decay=0.01
     )
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optim, T_max=epochs)
     criterion = nn.CrossEntropyLoss()
-    train_set = get_dataloader(dataset=ImplementedDatasets.SUAS, batch_size=32, train=True)
-    val_set   = get_dataloader(dataset=ImplementedDatasets.SUAS, batch_size=32, train=False)
+    imsz = get_imsize(ImplementedDatasets.SUAS)
+    tf = [
+        transforms.ToTensor(),
+        transforms.Resize((imsz, imsz)),
+        transforms.Grayscale(),
+        RollingShutter(1.3)
+    ]
+    train_set = get_dataloader(dataset=ImplementedDatasets.SUAS, batch_size=32, train=True, transform=tf)
+    val_set   = get_dataloader(dataset=ImplementedDatasets.SUAS, batch_size=32, train=False, transform=tf)
+
+    #img = next(iter(train_set))[0][0]
+    #img = img.detach().numpy().transpose(1, 2, 0)
+    #cv2.imshow("jie", img)
+    #cv2.waitKey(0)
+    #exit()
+
     print_interval = 10
-    model_save_path="VGGshape.pt"
+    model_save_path="VGGshape-normalgrayscale.pt"
     device = torch.device("cuda:0" if torch.cuda.is_available()  else "cpu")
 
     def test_fn():
