@@ -8,9 +8,13 @@ from train_model import train
 from test_model import test
 
 from datasets import ImplementedDatasets, get_dataloader
+from datasets.suas import SuasDataset
 
-from suas_transforms import RollingShutter
+from suas_transforms import RollingShutter, MotionBlur
 
+from torch.utils.tensorboard.writer import SummaryWriter
+from pathlib import Path
+from torch.utils.data import DataLoader
 
 class ShapeClassifier(nn.Module):
     def __init__(self, input_size = 200, in_channels = 1, num_classes=9):
@@ -53,7 +57,6 @@ class ShapeClassifier(nn.Module):
             nn.Linear(4096, num_classes)
         )
 
-
     def forward(self, x):
         features = self.backbone(x)
         return self.head(features)
@@ -64,23 +67,46 @@ if __name__ == "__main__":
     optim = torch.optim.Adam(
         params=model.parameters(),
         lr=1e-3,
-        weight_decay=0.01
+        weight_decay=0.03
     )
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optim, T_max=epochs)
     criterion = nn.CrossEntropyLoss()
     imsz = get_imsize(ImplementedDatasets.SUAS)
-    tf = [
+    train_tf = [
+        MotionBlur(),
         transforms.ToTensor(),
         transforms.Resize((imsz, imsz)),
+        transforms.ColorJitter((0.5, 3.0)),
         transforms.Grayscale(),
-        RollingShutter(1.3)
+        transforms.ElasticTransform(alpha = 50.0),
+        RollingShutter(1.5),
     ]
-    train_set = get_dataloader(dataset=ImplementedDatasets.SUAS, batch_size=32, train=True, transform=tf)
-    val_set   = get_dataloader(dataset=ImplementedDatasets.SUAS, batch_size=32, train=False, transform=tf)
+    test_tf = [
+        transforms.ToTensor(),
+        transforms.Resize((imsz, imsz)),
+        transforms.Grayscale()
+    ]
+    train_set = get_dataloader(dataset=ImplementedDatasets.SUAS, batch_size=32, train=True, transform=train_tf)
+    val_set   = get_dataloader(dataset=ImplementedDatasets.SUAS, batch_size=32, train=False, transform=train_tf)
 
-    #img = next(iter(train_set))[0][0]
-    #img = img.detach().numpy().transpose(1, 2, 0)
-    #cv2.imshow("jie", img)
+    test_set = DataLoader(
+        SuasDataset(
+            split="real_color_multilabel",
+            label_key="id_shape",
+            isMultiLabelFeatures=True,
+            transform=transforms.Compose(test_tf),
+            save_root_path=Path("/home/ascend/repos/cuDLA-samples/datasets/classification-data-may"),
+            dataset_root_path=Path("/home/ascend/repos/cuDLA-samples/datasets/classification-data-may")
+        ), 
+        batch_size=32, 
+        shuffle=True, 
+        num_workers=4
+    )
+
+    #for i in range(5):
+    #    img = next(iter(train_set))[0][i]
+    #    img = img.detach().numpy().transpose(1, 2, 0)
+    #    cv2.imshow(f"jie{i}", img)
     #cv2.waitKey(0)
     #exit()
 
@@ -88,8 +114,13 @@ if __name__ == "__main__":
     model_save_path="VGGshape-normalgrayscale.pt"
     device = torch.device("cuda:0" if torch.cuda.is_available()  else "cpu")
 
-    def test_fn():
-        return test(model, val_set, device, criterion)
+    LOGDIR=Path("runs")
+    paths = [path for path in LOGDIR.iterdir() if path.name.startswith("vgg")]
+    try:
+        iternum = 1+int(max([iternum.__str__().split("_")[1] for iternum in paths]))
+    except:
+        iternum = 1
+    writer = SummaryWriter(log_dir=f"runs/vgg_{iternum}")
 
     model.to(device)
     train(
@@ -102,5 +133,8 @@ if __name__ == "__main__":
         model_save_path=model_save_path,
         epochs=epochs,
         device=device,
-        test_fn=test_fn
+        test_set=test_set,
+        writer=writer,
+        val_set = val_set,
+        val_interval = 600
     )

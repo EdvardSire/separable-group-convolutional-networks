@@ -17,7 +17,7 @@ def topK(out, labels, TOPK_N=5):
 
 
 def train(model, optim, scheduler, criterion, train_set, test_set, device, epochs=2, grad_clip_value=1.0, print_interval=100,
-          model_save_path="./ckgcnn.pt", save_interval=100, global_stepcount=True, writer=None, testing=True):
+          model_save_path="./ckgcnn.pt", save_interval=100, global_stepcount=True, writer=None, testing=True, val_set = None, val_interval = 1000):
     """
 
     :param model:
@@ -86,8 +86,8 @@ def train(model, optim, scheduler, criterion, train_set, test_set, device, epoch
                 print("TOPK")
                 TOPK_N = 5
                 topk_conf, fused_aryy = topK(out.cpu(), labels.cpu(), TOPK_N)
-                print(fused_aryy)
-                print(topk_conf)
+                #print(fused_aryy)
+                #print(topk_conf)
 
                 if writer:
                     writer.add_scalar("Loss/train", loss, step)
@@ -99,11 +99,15 @@ def train(model, optim, scheduler, criterion, train_set, test_set, device, epoch
                 print(f"epoch {epoch} - iteration {iteration} - batch loss {loss.item():.2f} - batch accuracy {corrects / labels.size(0):.2f}")
                 print()
 
-
             # save the model on interval
             if not iteration % save_interval:
                 if model_save_path:
                     torch.save(model, model_save_path)
+
+            if val_set is not None and iteration % val_interval == 0:
+                test(model, val_set, device, step, loss=criterion, writer=writer, test_name="val")
+                model.train()
+
 
         # save the model after each epoch
         if model_save_path:
@@ -115,6 +119,6 @@ def train(model, optim, scheduler, criterion, train_set, test_set, device, epoch
             if val_acc > best_acc:
                 best_acc = val_acc
 
-            # step learning rate
-            if scheduler:
-                scheduler.step()
+        # step learning rate
+        if scheduler:
+            scheduler.step()

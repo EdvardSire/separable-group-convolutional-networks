@@ -37,13 +37,12 @@ class SuasDataset(VisionDataset):
                  label_key = "id_shape",
                  dataset_root_path: Path = Path("/home/ascend/repos/cuDLA-samples/datasets/custom_new_data"),
                  save_root_path: Path = Path("/home/ascend/repos/cuDLA-samples/datasets/custom_new_data_shape"),
-                 train_mode: bool = True,
+                 split: str = "train",
                  transform = None,
                  isMultiLabelFeatures = False
                  ):
         super().__init__(transform=transform)
-        #self.PATH_STEM = (Path("train_gray") if train_mode else Path("val_gray"))
-        self.PATH_STEM = (Path("train") if train_mode else Path("val"))
+        self.PATH_STEM = Path(split)
         self.images = list()
         self.labels = list()
         self.dataset_pickle_path = (save_root_path / self.PATH_STEM.with_suffix(".mnt"))
@@ -128,7 +127,7 @@ class SuasDataset(VisionDataset):
 
 if __name__ == "__main__":
     # dataset = SuasDataset(train_mode=True)
-    dataset = SuasDataset("id_shape", train_mode=True)
+    dataset = SuasDataset("id_shape", split="train")
     dataset.prepareGray()
     # for i in range(20*20):
     #     dataset.__getitem__(i)

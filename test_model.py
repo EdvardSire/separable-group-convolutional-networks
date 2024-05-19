@@ -1,9 +1,10 @@
 import torch
 import wandb
 import torch
+from tqdm import tqdm
 
 
-def test(model, test_set, device, step, loss=None, limit=None, writer=None):
+def test(model, test_set, device, step, loss=None, limit=None, writer=None, test_name = "test"):
     """
     Evaluate the classification accuracy of a given model on a given test set.
 
@@ -18,7 +19,7 @@ def test(model, test_set, device, step, loss=None, limit=None, writer=None):
 
     with torch.no_grad():
         model.eval()
-        for data in test_set:
+        for data in tqdm(test_set):
             images, labels = data
 
             images = images.to(device)
@@ -37,10 +38,10 @@ def test(model, test_set, device, step, loss=None, limit=None, writer=None):
                     break
 
     if writer:
-        writer.add_scalar("Loss/test", total_loss, step)
-        writer.add_scalar("Accuracy/test", 100* correct / total, step)
+        writer.add_scalar(f"Loss/{test_name}", total_loss, step)
+        writer.add_scalar(f"Accuracy/{test_name}", 100* correct / total, step)
         writer.flush()
-    print(f"test set accuracy on {total} samples: {(100 * correct / total):.2f}%")
+    print(f"{test_name} set accuracy on {total} samples: {(100 * correct / total):.2f}%")
 
     if wandb.run:
         wandb.log({"test_accuracy": correct/total, "test_loss": total_loss/total_batches})
