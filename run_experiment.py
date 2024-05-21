@@ -171,13 +171,14 @@ if __name__ == "__main__":
 
 
     LOGDIR=Path("runs")
-    paths = [path for path in LOGDIR.iterdir() if path.name.startswith("exp")]
+    model_name = f"{config['model']}_{config['implementation']}_{str(config['hidden_sizes'])}_{str(config['kernel_size'])}_{config['omega_0']}_{config['num_group_elements']}_{config['group']}_{config['sampling_method']}"
+    paths = [path for path in LOGDIR.iterdir() if path.name.startswith(model_name)]
     try:
         iternum = 1+int(max([iternum.__str__().split("_")[1] for iternum in paths]))
     except:
         iternum = 1
 
-    writer = SummaryWriter(log_dir="runs/exp_{}".format((iternum)))
+    writer = SummaryWriter(log_dir=f"runs/{model_name}_{iternum}")
     # writer.add_hparams({}, {"group": config["group"],
     #                     # "hidden_sizes": config["hidden_sizes"],
     #                     # "num_group_elem": config["num_group_elements"],
