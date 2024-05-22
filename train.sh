@@ -2,12 +2,12 @@
 python3 run_experiment.py \
     --model ckgresnet \
     --group SE2 \
-    --num_group_elements 8 \
+    --num_group_elements 12 \
     --sampling_method discretise \
     --hidden_sizes 32,32,64 \
     --dataset SUAS \
     --epochs 1000 \
-    --batch_size 32 \
+    --batch_size 30 \
     --learning_rate 1e-4 \
     --optim adam \
     --kernel_size 7 \
