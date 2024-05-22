@@ -174,7 +174,7 @@ if __name__ == "__main__":
     model_name = f"{config['model']}_{config['implementation']}_{str(config['hidden_sizes'])}_{str(config['kernel_size'])}_{config['omega_0']}_{config['num_group_elements']}_{config['group']}_{config['sampling_method']}"
     paths = [path for path in LOGDIR.iterdir() if path.name.startswith(model_name)]
     try:
-        iternum = 1+int(max([iternum.__str__().split("_")[1] for iternum in paths]))
+        iternum = 1+int(max([iternum.__str__().split("_")[-1] for iternum in paths]))
     except:
         iternum = 1
 

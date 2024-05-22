@@ -2,19 +2,19 @@
 python3 run_experiment.py \
     --model ckgresnet \
     --group SE2 \
-    --num_group_elements 12 \
+    --num_group_elements 8 \
     --sampling_method discretise \
-    --hidden_sizes 32,32,64 \
+    --hidden_sizes 32,64,128 \
     --dataset SUAS \
     --epochs 1000 \
-    --batch_size 30 \
+    --batch_size 16 \
     --learning_rate 1e-4 \
     --optim adam \
     --kernel_size 7 \
     --stride 1 \
     --dropout 0 \
     --weight_decay 1e-4 \
-    --ck_net_num_hidden 1 \
+    --ck_net_num_hidden 2 \
     --ck_net_hidden_size 64 \
     --first_omega_0 10 \
     --omega_0 10 \
