@@ -8,3 +8,4 @@ wandb
 *.profile
 *.onnx
 *.mnt
+runs/

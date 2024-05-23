@@ -116,19 +116,19 @@ def get_imsize(dataset):
         raise ValueError(f"Dataset {dataset} not supported.")
 
 
-def get_dataloader(dataset, batch_size, train=True, root="../data", augment=False):
+def get_dataloader(dataset, batch_size, train=True, root="../data", augment=False, transform = []):
     if dataset == ImplementedDatasets.SUAS:
         size = get_imsize(ImplementedDatasets.SUAS)
-        tf = [transforms.ToTensor(),
+        tf = transform if len(transform) else [transforms.ToTensor(),
               transforms.Resize((size, size)) ]
-        if train:
-            ds = SuasDataset(train_mode=True, transform=transforms.Compose(tf))
-        else:
-            ds = SuasDataset(save_root_path=Path("/home/ascend/repos/datasets/custom_new_data_ocr_val"),
-                                   train_mode=False,
-                                   isMultiLabelFeatures=True,
-                                    transform=transforms.Compose(tf))
-
+        ds = SuasDataset(
+            split="train" if train else "val", 
+            transform=transforms.Compose(tf), 
+            label_key="id_shape", 
+            isMultiLabelFeatures=True,
+            save_root_path=Path("/home/ascend/repos/cuDLA-samples/datasets/classification-data-may"),
+            dataset_root_path=Path("/home/ascend/repos/cuDLA-samples/datasets/classification-data-may")
+        )
     elif dataset == ImplementedDatasets.MNIST:
 
         tf = [transforms.ToTensor(),

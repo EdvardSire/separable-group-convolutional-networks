@@ -81,13 +81,6 @@ def train(model, optim, scheduler, criterion, train_set, test_set, device, epoch
             total_samples += labels.size(0)
 
 
-            if iteration and  iteration % ((21000/32) // 4) == 0:
-                if testing:
-                    val_acc = test(model, test_set, device, step, loss=criterion, writer=writer)
-
-                    if val_acc > best_acc:
-                        best_acc = val_acc
-
             # print running loss every n steps
             if not iteration % print_interval:
                 print("TOPK")
@@ -116,7 +109,12 @@ def train(model, optim, scheduler, criterion, train_set, test_set, device, epoch
         if model_save_path:
             torch.save(model, Path(writer.get_logdir()) / Path("model_epoch_num_{}".format(epoch)).with_suffix(".pt"))
 
-        # step learning rate
-        if scheduler:
-            scheduler.step()
+        if testing:
+            val_acc = test(model, test_set, device, step, loss=criterion, writer=writer)
 
+            if val_acc > best_acc:
+                best_acc = val_acc
+
+            # step learning rate
+            if scheduler:
+                scheduler.step()

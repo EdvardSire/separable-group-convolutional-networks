@@ -58,7 +58,7 @@ class SuasDataset(VisionDataset):
                  pickle_suffix = ".mnt"
                  ):
         super().__init__(transform=transform)
-        self.PATH_STEM = (Path("train") if train_mode else Path("val"))
+        self.PATH_STEM = Path(split)
         self.images = list()
         self.labels = list()
         self.dataset_pickle_path = (save_root_path / self.PATH_STEM.with_suffix(pickle_suffix))
@@ -150,8 +150,6 @@ class SuasDataset(VisionDataset):
 
             if self.transform is not None:
                 img = self.transform(img)
-
-            print(label)
 
             return (img, label)
 
