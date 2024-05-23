@@ -103,11 +103,7 @@ def train(model, optim, scheduler, criterion, train_set, test_set, device, epoch
             # save the model on interval
             if not iteration % save_interval:
                 if model_save_path:
-                    torch.save(model, model_save_path)
-
-        # save the model after each epoch
-        if model_save_path:
-            torch.save(model, Path(writer.get_logdir()) / Path("model_epoch_num_{}".format(epoch)).with_suffix(".pt"))
+                    torch.save(model, Path(writer.get_logdir()) / Path("model_iter_{}".format(iteration)).with_suffix(".pt"))
 
         if testing:
             val_acc = test(model, test_set, device, step, loss=criterion, writer=writer)

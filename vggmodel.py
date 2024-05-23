@@ -1,11 +1,9 @@
 import torch
 from torch import nn, optim
 from torchvision.transforms import transforms
-import cv2
 
 from datasets.dataset import get_imsize
 from train_model import train
-from test_model import test
 
 from datasets import ImplementedDatasets, get_dataloader
 from datasets.suas import SuasDataset
@@ -21,8 +19,8 @@ class ShapeClassifier(nn.Module):
         super().__init__()
         self.in_channels = in_channels
 
-        hidden_dims = [[64, 64], [128, 128], [256, 256, 256], [512, 512, 512], [512, 512, 512]]
-        #hidden_dims = [[64, 64], [128, 128], [256, 256, 256], [512, 512, 512]]
+        # hidden_dims = [[64, 64], [128, 128], [256, 256, 256], [512, 512, 512], [512, 512, 512]]
+        hidden_dims = [[64, 64], [128, 128], [256, 256, 256], [512, 512, 512]]
         layers = []
 
         for conv_group in hidden_dims:
@@ -62,6 +60,20 @@ class ShapeClassifier(nn.Module):
         return self.head(features)
 
 if __name__ == "__main__":
+    # imsz = get_imsize(ImplementedDatasets.SUAS)
+    # train_tf = [
+    #     MotionBlur(),
+    #     transforms.ToTensor(),
+    #     transforms.Resize((imsz, imsz)),
+    #     transforms.ColorJitter((0.5, 3.0)),
+    #     transforms.Grayscale(),
+    #     transforms.ElasticTransform(alpha = 50.0),
+    #     RollingShutter(1.5),
+    # ]
+    # test_tf = [
+    #     transforms.ToTensor(),
+    #     transforms.Resize((imsz, imsz)),
+    #     transforms.Grayscale()
     epochs = 300
     model = ShapeClassifier()
     optim = torch.optim.Adam(
@@ -71,47 +83,10 @@ if __name__ == "__main__":
     )
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optim, T_max=epochs)
     criterion = nn.CrossEntropyLoss()
-    imsz = get_imsize(ImplementedDatasets.SUAS)
-    train_tf = [
-        MotionBlur(),
-        transforms.ToTensor(),
-        transforms.Resize((imsz, imsz)),
-        transforms.ColorJitter((0.5, 3.0)),
-        transforms.Grayscale(),
-        transforms.ElasticTransform(alpha = 50.0),
-        RollingShutter(1.5),
-    ]
-    test_tf = [
-        transforms.ToTensor(),
-        transforms.Resize((imsz, imsz)),
-        transforms.Grayscale()
-    ]
-    train_set = get_dataloader(dataset=ImplementedDatasets.SUAS, batch_size=32, train=True, transform=train_tf)
-    val_set   = get_dataloader(dataset=ImplementedDatasets.SUAS, batch_size=32, train=False, transform=train_tf)
-
-    test_set = DataLoader(
-        SuasDataset(
-            split="real_color_multilabel",
-            label_key="id_shape",
-            isMultiLabelFeatures=True,
-            transform=transforms.Compose(test_tf),
-            save_root_path=Path("/home/ascend/repos/cuDLA-samples/datasets/classification-data-may"),
-            dataset_root_path=Path("/home/ascend/repos/cuDLA-samples/datasets/classification-data-may")
-        ), 
-        batch_size=32, 
-        shuffle=True, 
-        num_workers=4
-    )
-
-    #for i in range(5):
-    #    img = next(iter(train_set))[0][i]
-    #    img = img.detach().numpy().transpose(1, 2, 0)
-    #    cv2.imshow(f"jie{i}", img)
-    #cv2.waitKey(0)
-    #exit()
-
+    train_set = get_dataloader(dataset=ImplementedDatasets.SUAS, batch_size=32, train=True)
+    test_set = get_dataloader(dataset=ImplementedDatasets.SUAS, batch_size=32, train=False)
     print_interval = 10
-    model_save_path="VGGshape-normalgrayscale.pt"
+    model_save_path=True
     device = torch.device("cuda:0" if torch.cuda.is_available()  else "cpu")
 
     LOGDIR=Path("runs")
@@ -135,6 +110,4 @@ if __name__ == "__main__":
         device=device,
         test_set=test_set,
         writer=writer,
-        val_set = val_set,
-        val_interval = 600
-    )
+        )

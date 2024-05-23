@@ -121,14 +121,21 @@ def get_dataloader(dataset, batch_size, train=True, root="../data", augment=Fals
         size = get_imsize(ImplementedDatasets.SUAS)
         tf = transform if len(transform) else [transforms.ToTensor(),
               transforms.Resize((size, size)) ]
-        ds = SuasDataset(
-            split="train" if train else "val", 
-            transform=transforms.Compose(tf), 
-            label_key="id_shape", 
-            isMultiLabelFeatures=True,
-            save_root_path=Path("/home/ascend/repos/cuDLA-samples/datasets/classification-data-may"),
-            dataset_root_path=Path("/home/ascend/repos/cuDLA-samples/datasets/classification-data-may")
-        )
+        if train:
+            ds = SuasDataset(
+                transform=transforms.Compose(tf), 
+                train_mode=True,
+                label_key="id_shape", 
+            )
+        else:
+            ds = SuasDataset(
+                transform=transforms.Compose(tf), 
+                train_mode=False,
+                label_key="id_shape", 
+                isMultiLabelFeatures=True,
+                save_root_path=Path("/home/ascend/repos/datasets/custom_new_data_ocr_val"),
+                pickle_suffix=".mnt"
+            )
     elif dataset == ImplementedDatasets.MNIST:
 
         tf = [transforms.ToTensor(),

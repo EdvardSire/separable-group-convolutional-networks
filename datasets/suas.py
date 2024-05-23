@@ -55,10 +55,10 @@ class SuasDataset(VisionDataset):
                  train_mode: bool = True,
                  transform = None,
                  isMultiLabelFeatures = False,
-                 pickle_suffix = ".mnt"
+                 pickle_suffix = ".pkl"
                  ):
         super().__init__(transform=transform)
-        self.PATH_STEM = Path(split)
+        self.PATH_STEM = (Path("train") if train_mode else Path("val"))
         self.images = list()
         self.labels = list()
         self.dataset_pickle_path = (save_root_path / self.PATH_STEM.with_suffix(pickle_suffix))
@@ -144,7 +144,7 @@ class SuasDataset(VisionDataset):
             assert self.label_key == "id_shape"
             img = self.images[index]
             if self.isMultiLabelFeatures:
-                label = int(self.labels[index][2]) 
+                label = int(self.labels[index][0]) 
             else:
                 label = int(self.labels[index])
 
