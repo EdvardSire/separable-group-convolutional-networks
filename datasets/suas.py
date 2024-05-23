@@ -1,4 +1,3 @@
-from torch._C import _is_multithreading_enabled
 from torchvision.datasets import VisionDataset
 from pathlib import Path
 import json
@@ -10,6 +9,7 @@ import cv2
 import numpy as np
 import sys
 import string
+from pickle import Pickler, Unpickler
 
 alphabet = string.digits+string.ascii_uppercase
 new_alphabet = "012345678ACDEFGHIJKMNPQRTUVXY"
@@ -31,33 +31,49 @@ def rgb2gray(images: list[tImage], labels: list[int], use_tqdm = True):
     return (local_images, local_labels)
 
 
+def save_pickle(data, save_path: Path, useTorch=True):
+    if not save_path.parent.exists():
+        save_path.parent.mkdir(parents=True)
+
+    if useTorch:
+        torch.save(data, save_path.with_suffix(".mnt"))
+    else:
+        Pickler(open(save_path.with_suffix(".pkl"), "wb")).dump(data)
+
+def load_pickle(read_path: Path, useTorch=True):
+    if useTorch:
+        return torch.load(read_path)
+    else: 
+        return Unpickler(open(read_path, "rb")).load()
+
+
 class SuasDataset(VisionDataset):
     def __init__(self,
                  label_key = "id_shape",
                  symbol_key = "id_symbol",
-                 label_key = "id_symbol",
                  dataset_root_path: Path = Path("/home/ascend/repos/datasets/custom_new_data"),
-                 save_root_path: Path = Path("/home/ascend/repos/datasets/custom_new_data_shape_symbol"),
+                 save_root_path: Path = Path("/home/ascend/repos/datasets/custom_new_data_ocr"),
                  train_mode: bool = True,
                  transform = None,
-                 isMultiLabelFeatures = False
+                 isMultiLabelFeatures = False,
+                 pickle_suffix = ".mnt"
                  ):
         super().__init__(transform=transform)
         self.PATH_STEM = (Path("train") if train_mode else Path("val"))
         self.images = list()
         self.labels = list()
-        self.dataset_picke_path = (save_root_path / self.PATH_STEM.with_suffix(".mnt"))
+        self.dataset_pickle_path = (save_root_path / self.PATH_STEM.with_suffix(pickle_suffix))
         self.label_key = label_key
         self.symbol_key = symbol_key
         self.isMultiLabelFeatures = isMultiLabelFeatures
 
-        if not self.dataset_picke_path.exists():
-            print(f"{self.dataset_picke_path} not found, generating it!")
+        if not self.dataset_pickle_path.exists():
+            print(f"{self.dataset_pickle_path} not found, generating it!")
             self.prepare(dataset_root_path)
-            torch.save((self.images, self.labels), (save_root_path / self.PATH_STEM.with_suffix(".mnt")))
+            save_pickle((self.images, self.labels), self.dataset_pickle_path, True if pickle_suffix==".mnt" else False)
         else:
-            print(f"{self.dataset_picke_path} found, loading it!")
-            self.images, self.labels = torch.load(self.dataset_picke_path)
+            print(f"{self.dataset_pickle_path} found, loading it!")
+            self.images, self.labels = load_pickle(self.dataset_pickle_path, True if pickle_suffix==".mnt" else False)
 
 
     def prepare(self, dataset_root_path: Path):
@@ -77,28 +93,27 @@ class SuasDataset(VisionDataset):
                 print(sizeEstimate(self.images) // 10**6, "MB")
 
 
-    def prepareGray(self, method="manual_kernel"):
+    def saveGray(self, method="manual_kernel"):
         if method == "manual_kernel":
-            torch.save(rgb2gray(self.images, self.labels), self.dataset_picke_path.with_name(self.PATH_STEM.__str__()+"_gray").with_suffix(".mnt"))
+            save_pickle(rgb2gray(self.images, self.labels), self.dataset_pickle_path.with_name(self.PATH_STEM.__str__()+"_gray"))
             return
+
         elif method == "otsu":
             local_images = list()
             for local_image in self.images:
                 local_images.append(
                         cv2.threshold(
                             cv2.GaussianBlur(
-                                cv2.cvtColor(local_image, cv2.COLOR_BGR2GRAY),
+                                cv2.cvtColor(np.array(local_image), cv2.COLOR_BGR2GRAY),
                                 (5, 5), 0
                             ),
                             0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU
                         )[1]
                 )
-            torch.save((local_images, self.labels), self.dataset_picke_path.with_name(self.PATH_STEM.__str__()+"_otsu").with_suffix(".mnt"))
-
-
-
-
+            save_pickle((local_images, self.labels), self.dataset_pickle_path.with_name(self.PATH_STEM.__str__()+"_otsu"), useTorch=False)
+            return
         
+
     def __len__(self):
         return len(self.images)
 
@@ -141,7 +156,8 @@ class SuasDataset(VisionDataset):
 
 if __name__ == "__main__":
     # dataset = SuasDataset(train_mode=True)
-    dataset = SuasDataset("id_shape", "id_symbol", train_mode=True)
+    dataset = SuasDataset("id_shape", "id_symbol", train_mode=False, pickle_suffix=".pkl")
+    dataset.saveGray("otsu")
     # for i in range(20*20):
     #     dataset.__getitem__(i)
     # dataset.rgb2gray()
