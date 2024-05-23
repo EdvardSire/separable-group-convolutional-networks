@@ -102,15 +102,15 @@ def train(model, optim, scheduler, criterion, train_set, test_set, device, epoch
 
             # save the model on interval
             if not iteration % save_interval:
+                if testing:
+                    val_acc = test(model, test_set, device, step, loss=criterion, writer=writer)
+                    model.train()
+                    if val_acc > best_acc:
+                        best_acc = val_acc
+
                 if model_save_path:
                     torch.save(model, Path(writer.get_logdir()) / Path(f"model_iter_{step}").with_suffix(".pt"))
 
-        if testing:
-            val_acc = test(model, test_set, device, step, loss=criterion, writer=writer)
-
-            if val_acc > best_acc:
-                best_acc = val_acc
-
-            # step learning rate
-            if scheduler:
-                scheduler.step()
+        # step learning rate
+        if scheduler:
+            scheduler.step()
