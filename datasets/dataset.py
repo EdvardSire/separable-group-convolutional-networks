@@ -133,7 +133,7 @@ def get_dataloader(dataset, batch_size, train=True, root="../data", augment=Fals
                 train_mode=False,
                 label_key="id_shape", 
                 isMultiLabelFeatures=True,
-                save_root_path=Path("/home/ascend/repos/datasets/custom_new_data_ocr_val"),
+                save_root_path=Path("/home/ascend/repos/datasets/custom_new_data_otsu_shape_val"),
                 pickle_suffix=".mnt"
             )
     elif dataset == ImplementedDatasets.MNIST:
