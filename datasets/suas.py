@@ -74,8 +74,23 @@ class SuasDataset(VisionDataset):
                 print(sizeEstimate(self.images) // 10**6, "MB")
 
 
-    def prepareGray(self):
-        torch.save(rgb2gray(self.images, self.labels), self.dataset_picke_path.with_name(self.PATH_STEM.__str__()+"_gray").with_suffix(".mnt"))
+    def prepareGray(self, method="manual_kernel"):
+        if method == "manual_kernel":
+            torch.save(rgb2gray(self.images, self.labels), self.dataset_picke_path.with_name(self.PATH_STEM.__str__()+"_gray").with_suffix(".mnt"))
+            return
+        elif method == "otsu":
+            local_images = list()
+            for local_image in self.images:
+                local_images.append(
+                        cv2.threshold(
+                            cv2.GaussianBlur(
+                                cv2.cvtColor(local_image, cv2.COLOR_BGR2GRAY),
+                                (5, 5), 0
+                            ),
+                            0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU
+                        )[1]
+                )
+            torch.save((local_images, self.labels), self.dataset_picke_path.with_name(self.PATH_STEM.__str__()+"_otsu").with_suffix(".mnt"))
 
 
 
