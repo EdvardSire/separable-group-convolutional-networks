@@ -79,6 +79,7 @@ class SuasDataset(VisionDataset):
     def prepare(self, dataset_root_path: Path):
         for i, label_json in enumerate(tqdm((dataset_root_path / self.PATH_STEM).iterdir())):
             if not label_json.suffix == ".json": continue
+            if i == 10: return
 
             with open(label_json.__str__(), 'r') as file:
                 json_dump = json.load(file)
