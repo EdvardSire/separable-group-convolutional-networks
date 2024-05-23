@@ -50,9 +50,8 @@ def load_pickle(read_path: Path, useTorch=True):
 class SuasDataset(VisionDataset):
     def __init__(self,
                  label_key = "id_shape",
-                 symbol_key = "id_symbol",
                  dataset_root_path: Path = Path("/home/ascend/repos/datasets/custom_new_data"),
-                 save_root_path: Path = Path("/home/ascend/repos/datasets/custom_new_data_ocr"),
+                 save_root_path: Path = Path("/home/ascend/repos/datasets/custom_new_data_otsu_shape"),
                  train_mode: bool = True,
                  transform = None,
                  isMultiLabelFeatures = False,
@@ -88,7 +87,7 @@ class SuasDataset(VisionDataset):
                             bbox = json_dump[index]["bbox"]
                             cropped_image = image.convert("RGB").crop((bbox["xmin"], bbox["ymin"], bbox["xmax"], bbox["ymax"]))
                             self.images.append(cropped_image)
-                            self.labels.append((json_dump[index][self.label_key], json_dump[index][self.symbol_key]))
+                            self.labels.append(json_dump[index][self.label_key])
             if i % 100 == 0:
                 print(sizeEstimate(self.images) // 10**6, "MB")
 
@@ -144,7 +143,11 @@ class SuasDataset(VisionDataset):
             return (img, new_label)
         else:
             assert self.label_key == "id_shape"
-            img, label = self.images[index], int(self.labels[index])
+            img = self.images[index]
+            if self.isMultiLabelFeatures:
+                label = int(self.labels[index][2]) 
+            else:
+                label = int(self.labels[index])
 
             if self.transform is not None:
                 img = self.transform(img)
@@ -157,7 +160,9 @@ class SuasDataset(VisionDataset):
 if __name__ == "__main__":
     # dataset = SuasDataset(train_mode=True)
     dataset = SuasDataset("id_shape", "id_symbol", train_mode=False, pickle_suffix=".pkl")
-    dataset.saveGray("otsu")
+    for i in range(30):
+        print(dataset.labels[i])
+    # dataset.saveGray("otsu")
     # for i in range(20*20):
     #     dataset.__getitem__(i)
     # dataset.rgb2gray()
