@@ -63,7 +63,6 @@ class SuasDataset(VisionDataset):
         self.labels = list()
         self.dataset_pickle_path = (save_root_path / self.PATH_STEM.with_suffix(pickle_suffix))
         self.label_key = label_key
-        self.symbol_key = symbol_key
         self.isMultiLabelFeatures = isMultiLabelFeatures
 
         if not self.dataset_pickle_path.exists():
@@ -159,10 +158,8 @@ class SuasDataset(VisionDataset):
 
 if __name__ == "__main__":
     # dataset = SuasDataset(train_mode=True)
-    dataset = SuasDataset("id_shape", "id_symbol", train_mode=False, pickle_suffix=".pkl")
-    for i in range(30):
-        print(dataset.labels[i])
-    # dataset.saveGray("otsu")
+    dataset = SuasDataset("id_shape", train_mode=False, pickle_suffix=".pkl")
+    dataset.saveGray("otsu")
     # for i in range(20*20):
     #     dataset.__getitem__(i)
     # dataset.rgb2gray()
